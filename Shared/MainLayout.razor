@@ -1,23 +1,41 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavManager
 
 <MudThemeProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar>
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        My Application
+    @if (_globalState.CurrentUser != null)
+    {
+        <MudAppBar>
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        Bislerium
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen">
         <NavMenu/>
     </MudDrawer>
+    }
     <MudMainContent>
-        @Body
+        <CascadingValue Value="@_globalState">
+                @Body
+         </CascadingValue>
     </MudMainContent>
 </MudLayout>
 
 @code {
+    private GlobalState _globalState = new();
+
+    protected override void OnInitialized()
+    {
+        UsersService.SeedUsers();
+    }
+
+    private void LogoutHandler()
+    {
+        _globalState.CurrentUser = null;
+        NavManager.NavigateTo("/login");
+    }
     bool _drawerOpen = true;
 
     void DrawerToggle()

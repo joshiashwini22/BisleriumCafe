@@ -1,9 +1,27 @@
-﻿<MudNavMenu>
-    <MudNavLink Href="/" Match="NavLinkMatch.All">Dashboard</MudNavLink>
-    <MudNavLink Href="/servers" Match="NavLinkMatch.Prefix">Servers</MudNavLink>
-    <MudNavGroup Title="Settings" Expanded="true">
-        <MudNavLink Href="/users" Match="NavLinkMatch.Prefix">Users</MudNavLink>
-        <MudNavLink Href="/security" Match="NavLinkMatch.Prefix">Security</MudNavLink>
+﻿﻿@using BisleriumCafe.Data;
+@using BisleriumCafe.Data.Models;
+@using BisleriumCafe.Data.Enums;
+
+<MudNavMenu>
+    <MudDrawerHeader Class="nav-header">
+        <MudText Typo="Typo.h6">Bislerium Cafe</MudText>
+    </MudDrawerHeader>
+    <MudNavLink Href="/" Icon="@Icons.Material.Rounded.Dashboard" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+    <MudNavLink Href="/products" Icon="@Icons.Material.Rounded.Inventory" Match="NavLinkMatch.All">Products</MudNavLink>
+    @if (_globalState.CurrentUser.Role == Role.Admin)
+    {
+        <MudNavLink Href="/users" Icon="@Icons.Material.Rounded.Groups" Match="NavLinkMatch.All">Users</MudNavLink>
+    }
+    <MudNavGroup Title="Inventory Logs" Icon="@Icons.Material.Rounded.History" Expanded="true">
+        @if (_globalState.CurrentUser.Role == Role.Admin)
+        {
+            <MudNavLink Href="/add-products" Icon="@Icons.Material.Rounded.AddCircleOutline" Match="NavLinkMatch.All">Addition Products</MudNavLink>
+        }
+        <MudNavLink Href="/withdraw-products" Icon="@Icons.Material.Rounded.RemoveCircleOutline" Match="NavLinkMatch.All">Withdrawal Products</MudNavLink>
     </MudNavGroup>
-    <MudNavLink Href="/about" Match="NavLinkMatch.Prefix">About</MudNavLink>
 </MudNavMenu>
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+}

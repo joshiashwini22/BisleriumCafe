@@ -1,4 +1,5 @@
 ﻿using BisleriumCafe.Data;
+using BisleriumCafe.Data.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 
@@ -27,7 +28,6 @@ namespace BisleriumCafe
     		builder.Logging.AddDebug();
 #endif
             builder.Services.AddMudServices();
-            builder.Services.AddSingleton<WeatherForecastService>();
 
             return builder.Build();
         }

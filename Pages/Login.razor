@@ -1,0 +1,65 @@
+﻿@page "/login"
+@using BisleriumCafe.Data;
+@using BisleriumCafe.Data.Models;
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+
+<MudForm @ref="LoginForm" Class="login-form">
+    <MudCard Elevation="3" Class="py-5">
+        <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Bislerium Cafe - Login</MudText></MudCardHeader>
+        @if (_showDefaultCredentials)
+        {
+            <div class="alert alert-info" role="alert">
+                Username: <strong>@UsersService.SeedUsername</strong><br />
+                Password: <strong>@UsersService.SeedPassword</strong>
+            </div>
+        }
+        <MudCardContent>
+            <MudTextField @bind-Value="Username" T="string" Required="true" Label="Username" RequiredError="Username is required!" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="Password" T="string" Label="Password" Required="true" RequiredError="Password is required!" InputType="InputType.Password" Variant="Variant.Outlined" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleLogin">Login</MudButton>
+        </MudCardActions>
+    </MudCard>
+</MudForm>
+
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private bool _showDefaultCredentials { get; set; }
+    MudForm LoginForm;
+    private string Username { get; set; }
+    private string Password { get; set; }
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            var user = UsersService.Login(UsersService.SeedUsername, UsersService.SeedPassword);
+            _showDefaultCredentials = user.HasInitialPassword;
+        }
+        catch { }
+
+        _globalState.CurrentUser = null;
+    }
+
+    private void HandleLogin()
+    {
+        try
+        {
+            _globalState.CurrentUser = UsersService.Login(Username, Password);
+            if (_globalState.CurrentUser != null)
+            {
+                NavManager.NavigateTo(_globalState.CurrentUser.HasInitialPassword ? "/change-password" : "/");
+            }
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Incorrect Username/Password!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            LoginForm.Reset();
+        }
+    }
+}
