@@ -8,12 +8,16 @@
 <MudLayout>
     @if (_globalState.CurrentUser != null)
     {
-        <MudAppBar>
+    <MudAppBar>
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         Bislerium
     </MudAppBar>
     <MudDrawer @bind-Open="@_drawerOpen">
-        <NavMenu/>
+        <CascadingValue Value="@_globalState">
+            <NavMenu/>
+         </CascadingValue>
+        <MudIconButton Icon="@Icons.Rounded.Logout" Color="Color.Inherit" OnClick="@((e) => LogoutHandler())" />
+
     </MudDrawer>
     }
     <MudMainContent>
@@ -29,6 +33,7 @@
     protected override void OnInitialized()
     {
         UsersService.SeedUsers();
+        UsersService.SeedStaff();
     }
 
     private void LogoutHandler()

@@ -1,6 +1,117 @@
 ﻿@page "/users"
-<h3>Users</h3>
+@inject NavigationManager NavManager
 
-@code {
+@using BisleriumCafe.Data
+@using BisleriumCafe.Data.Models
+@inject ISnackbar Snackbar
 
+<MudContainer Class="mt-8">
+    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
+    {
+        <MudButton Class="position-absolute"  Style="top: 120px; right:100px;" Variant="Variant.Filled" OnClick="OpenAddUserDialog">Add</MudButton>
+    }
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllUsers" Hover="true" Striped="false">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Users</MudText>
+            <MudSpacer />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<User, object>(user => user.Username)">Username</MudTableSortLabel></MudTh>
+            <MudTh>User Type</MudTh>
+            <MudTh>Created At</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Username">@context.Username</MudTd>
+            <MudTd DataLabel="Role">@context.Role</MudTd>
+            <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code{
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private IEnumerable<User> AllUsers = new List<User>();
+    private bool _showAddUserDialog { get; set; }
+    private bool _showDeleteUserDialog { get; set; }
+    private string _addUserErrorMessage { get; set; }
+    private string _deleteUserErrorMessage { get; set; }
+    private User _deleteUser { get; set; }
+    private string _username { get; set; }
+    private string _password { get; set; }
+    private Role _role { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AllUsers = UsersService.GetAll();
+    }
+
+    private void OpenAddUserDialog()
+    {
+        _showAddUserDialog = true;
+        _username = "";
+        _password = "";
+        _role = Role.Staff;
+    }
+    private void OnAddUserDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showAddUserDialog = false;
+        }
+        else
+        {
+            try
+            {
+                _addUserErrorMessage = "";
+                AllUsers = UsersService.Create(_globalState.CurrentUser.ID, _username, _password, _role);
+                _showAddUserDialog = false;
+            }
+            catch (Exception e)
+            {
+                _addUserErrorMessage = e.Message;
+            }
+        }
+    }
+
+    private void RoleChangeHandler(ChangeEventArgs e)
+    {
+        _role = (Role)Enum.Parse(typeof(Role), e.Value.ToString());
+    }
+
+    private void OpenDeleteUserDialog(User user)
+    {
+        _deleteUser = user;
+        _showDeleteUserDialog = true;
+    }
+    private void OnDeleteUserDialogClose(bool isCancel)
+    {
+        if (isCancel)
+        {
+
+            _showDeleteUserDialog = false;
+            _deleteUser = null;
+        }
+        else
+        {
+            try
+            {
+                _deleteUserErrorMessage = "";
+                AllUsers = UsersService.Delete(_deleteUser.ID);
+                _showDeleteUserDialog = false;
+                _deleteUser = null;
+            }
+            catch (Exception e)
+            {
+                _deleteUserErrorMessage = e.Message;
+            }
+        }
+    }
+
+    
 }

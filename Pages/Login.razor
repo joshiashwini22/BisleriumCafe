@@ -39,6 +39,7 @@
         try
         {
             var user = UsersService.Login(UsersService.SeedUsername, UsersService.SeedPassword);
+            var staff = UsersService.Login(UsersService.SeedUsernameStaff, UsersService.SeedPasswordStaff);
             _showDefaultCredentials = user.HasInitialPassword;
         }
         catch { }
@@ -53,7 +54,14 @@
             _globalState.CurrentUser = UsersService.Login(Username, Password);
             if (_globalState.CurrentUser != null)
             {
-                NavManager.NavigateTo(_globalState.CurrentUser.HasInitialPassword ? "/change-password" : "/");
+                if (_globalState.CurrentUser.Role == Role.Staff)
+                {
+                    NavManager.NavigateTo("/");
+                }
+                else if (_globalState.CurrentUser.Role == Role.Admin)
+                {
+                    NavManager.NavigateTo("/products");
+                }
             }
         }
         catch (Exception e)

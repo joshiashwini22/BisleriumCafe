@@ -10,6 +10,9 @@ public static class UsersService
     public const string SeedUsername = "admin";
     public const string SeedPassword = "admin";
 
+    public const string SeedUsernameStaff = "staff";
+    public const string SeedPasswordStaff = "staff";
+
     private static void SaveAll(List<User> users)
     {
         string appDataDirectoryPath = Explorer.GetAppDirectoryPath();
@@ -39,12 +42,7 @@ public static class UsersService
     public static List<User> Create(Guid userId, string username, string password, Role role)
     {
         List<User> users = GetAll();
-        bool usernameExists = users.Any(x => x.Username == username);
-
-        if (usernameExists)
-        {
-            throw new Exception("Username already exists.");
-        }
+       
 
         users.Add(
             new User
@@ -61,13 +59,16 @@ public static class UsersService
     public static void SeedUsers()
     {
         var users = GetAll().FirstOrDefault(x => x.Role == Role.Admin);
-
-        if (users == null)
-        {
-            Create(Guid.Empty, SeedUsername, SeedPassword, Role.Admin);
-        }
+        Create(Guid.Empty, SeedUsername, SeedPassword, Role.Admin);
     }
 
+    public static void SeedStaff()
+    {
+        var users = GetAll().FirstOrDefault(x => x.Role == Role.Staff);
+
+       Create(Guid.Empty, SeedUsernameStaff, SeedPasswordStaff, Role.Staff);
+       
+    }
     public static User GetById(Guid id)
     {
         List<User> users = GetAll();
@@ -84,7 +85,6 @@ public static class UsersService
             throw new Exception("User not found.");
         }
 
-        //TodosService.DeleteByUserId(id);
         users.Remove(user);
         SaveAll(users);
 

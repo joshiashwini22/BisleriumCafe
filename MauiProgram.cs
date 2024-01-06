@@ -28,7 +28,6 @@ namespace BisleriumCafe
     		builder.Logging.AddDebug();
 #endif
             builder.Services.AddMudServices();
-
             return builder.Build();
         }
     }

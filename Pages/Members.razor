@@ -1,0 +1,113 @@
+﻿@page "/members"
+@inject NavigationManager NavManager
+
+@using BisleriumCafe.Data
+@using BisleriumCafe.Data.Services
+@using BisleriumCafe.Data.Models
+@inject ISnackbar Snackbar
+
+<MudContainer>
+    <MudButton Class="position-absolute"  Variant="Variant.Filled" OnClick="ToggleAddMemberPopover">Add Drink</MudButton>
+</MudContainer>
+<MudContainer Class="mt-8">    
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllMembers" Hover="true" Striped="false" Filter="new Func<Member,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Members</MudText>
+            <MudSpacer />
+           
+            <MudSpacer/>
+            <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh><MudTableSortLabel SortBy="new Func<Member, object>(invItem => invItem.Number)">Phone Number</MudTableSortLabel></MudTh>
+            <MudTh>First Name</MudTh>
+            <MudTh>Last Name</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Number">@context.Number</MudTd>
+            <MudTd DataLabel="First Name">@context.FirstName</MudTd>
+            <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+    
+</MudContainer>
+
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showAddMemberPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
+    <MudForm Model="@MemberModel" @ref="AddMemberForm">
+        <MudCardHeader><MudText Typo="Typo.h4">Add Member</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="number" T="string" Required="true" Label="Number" RequiredError=" Number is required!" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="firstName" T="string" Required="true" Label="First Name" RequiredError=" First name is required!" Variant="Variant.Outlined" />
+            <MudTextField @bind-Value="lastName" T="string" Required="true" Label="Last Name" RequiredError=" Last name is required!" Variant="Variant.Outlined" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddMember">Add</MudButton>
+            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddMemberPopover">Close</MudButton>
+        </MudCardActions>
+    </MudForm>
+</MudPopover>
+
+@code{
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private IEnumerable<Member> AllMembers = new List<Member>();
+    MudForm AddMemberForm;
+    private string number { get; set; }
+    private string firstName { get; set; }
+    private string lastName { get; set; }
+    private Member MemberModel { get; set; }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+
+        AllMembers = MembersService.GetAll();
+
+    }
+
+    private string toSearch = ""; //String to use for searching in the table
+    private Member selectedItem = null;
+
+    private bool showAddMemberPopOver = false;
+
+    private bool FilterHandler(Member item) => SearchFilter(item, toSearch);
+
+    private bool SearchFilter(Member item, string searchString)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (item.Number.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+    private void ToggleAddMemberPopover()
+    {
+        showAddMemberPopOver = !showAddMemberPopOver;
+    }
+
+    private async Task HandleAddMember()
+    {
+        try
+        {
+            MembersService.Create(firstName, lastName, number);
+            if (_globalState.CurrentUser != null)
+            {
+                NavManager.NavigateTo("/products");
+            }
+            
+        }
+        catch (Exception e)
+        {
+            Snackbar.Add("Incorrect !", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            AddMemberForm.Reset();
+        }
+    }
+}

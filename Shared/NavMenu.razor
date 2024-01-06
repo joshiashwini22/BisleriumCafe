@@ -7,21 +7,18 @@
         <MudText Typo="Typo.h6">Bislerium Cafe</MudText>
     </MudDrawerHeader>
     <MudNavLink Href="/" Icon="@Icons.Material.Rounded.Dashboard" Match="NavLinkMatch.All">Dashboard</MudNavLink>
+    <MudNavLink Href="/orders" Icon="@Icons.Material.Rounded.Inventory" Match="NavLinkMatch.All">Orders</MudNavLink>
     <MudNavLink Href="/products" Icon="@Icons.Material.Rounded.Inventory" Match="NavLinkMatch.All">Products</MudNavLink>
-    @if (_globalState.CurrentUser.Role == Role.Admin)
+    <MudNavLink Href="/members" Icon="@Icons.Material.Rounded.Groups" Match="NavLinkMatch.All">Members</MudNavLink>
+     @if (_globalState.CurrentUser.Role == Role.Admin)
     {
         <MudNavLink Href="/users" Icon="@Icons.Material.Rounded.Groups" Match="NavLinkMatch.All">Users</MudNavLink>
     }
-    <MudNavGroup Title="Inventory Logs" Icon="@Icons.Material.Rounded.History" Expanded="true">
-        @if (_globalState.CurrentUser.Role == Role.Admin)
-        {
-            <MudNavLink Href="/add-products" Icon="@Icons.Material.Rounded.AddCircleOutline" Match="NavLinkMatch.All">Addition Products</MudNavLink>
-        }
-        <MudNavLink Href="/withdraw-products" Icon="@Icons.Material.Rounded.RemoveCircleOutline" Match="NavLinkMatch.All">Withdrawal Products</MudNavLink>
-    </MudNavGroup>
-</MudNavMenu>
+   </MudNavMenu>
 
 @code {
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
+    public EventCallback LogoutHandler { get; set; }
+
 }
