@@ -1,0 +1,188 @@
+﻿@page "/checkout"
+@inject NavigationManager NavManager
+
+@using BisleriumCafe.Data
+@using BisleriumCafe.Data.Services
+@using BisleriumCafe.Data.Models
+@inject ISnackbar Snackbar
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-5" OnClick="goBack">
+    Back
+</MudButton>
+<h1>Checkout</h1>
+<MudForm @ref="AddMemberForm">
+    <MudCard Elevation="3" Class="py-5">
+        <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Member</MudText></MudCardHeader>
+        <MudCardContent>
+            <MudTextField @bind-Value="Number" T="string" Label="Number" Variant="Variant.Outlined" />
+            <MudButton Variant="Variant.Filled" DisableElevation="true" Color="Color.Primary" Class="mt-5" OnClick="handleVerification">Verify Membership</MudButton>
+        </MudCardContent>
+    </MudCard>
+</MudForm>
+
+<MudDialog @bind-IsVisible="isNormalDialogVisible" Options="dialogNormalOptions">
+    <DialogContent>
+        <div class="d-flex flex-column gap-y-3">
+            <MudText Typo="Typo.h4">Your Order Total is: @_totalOrderAmount</MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+            <MudButton OnClick="ConfirmNormalOrder" Color="Color.Primary">Confirm</MudButton>
+            <MudButton OnClick="CancelOrder" Color="Color.Secondary">Cancel Order</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="isMemberDialogVisible" Options="dialogMemberOptions">
+    <DialogContent>
+        <div class="d-flex flex-column gap-y-3">
+            <MudText Typo="Typo.h4">Your Order Total is: @_totalOrderAmount</MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+            <MudButton OnClick="ConfirmMemberOrder" Color="Color.Primary">Confirm</MudButton>
+            <MudButton OnClick="CancelOrder" Color="Color.Secondary">Cancel Order</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="isRedeemDialogVisible" Options="dialogRedeemOptions">
+    <DialogContent>
+        <div class="d-flex flex-column gap-y-3">
+            <MudText Typo="Typo.h4">Redeem Coffee</MudText>
+        </div>
+    </DialogContent>
+    <DialogActions>
+            <MudButton OnClick="CloseDialog3" Color="Color.Secondary">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+    @code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+
+    MudForm AddMemberForm;
+    private string Number { get; set; }
+    private Member _member { get; set; }
+    private bool _isValidMember { get; set; }
+
+    private string _errorMessage { get; set; } = "";
+
+    private bool isNormalDialogVisible;
+    private bool isMemberDialogVisible;
+    private bool isRedeemDialogVisible;
+    private DialogOptions dialogRedeemOptions = new() { FullWidth = true };
+    private DialogOptions dialogNormalOptions = new() { FullWidth = true };
+    private DialogOptions dialogMemberOptions = new() { FullWidth = true };
+
+
+    private void CloseDialog1()
+    {
+        isNormalDialogVisible = false;
+    }
+
+    private void CloseDialog2()
+    {
+        isMemberDialogVisible = false;
+    }
+
+    private void CloseDialog3()
+    {
+        _globalState.OrderItems.Clear();
+        NavManager.NavigateTo("/orders");
+        isRedeemDialogVisible = false;
+
+    }
+
+
+    private OrderItem selectedOrderItem = null;
+    private IEnumerable<OrderItem> Elements { set; get; } = new List<OrderItem>();
+    private float _totalOrderAmount { get; set; } = 1;
+
+    protected override void OnInitialized()
+    {
+        Elements = _globalState.OrderItems;
+        _totalOrderAmount = OrderItemsService.CalculateItemListTotal(Elements);
+
+    }
+
+    protected void goBack()
+    {
+        NavManager.NavigateTo("/orders");
+    }
+
+    protected async Task handleVerification()
+    {
+        try
+        {
+            _member = MembersService.GetByNumber(Number);
+
+            if (string.IsNullOrEmpty(Number))
+            {
+                isNormalDialogVisible = true;
+                return;
+            }
+            else
+            {
+                if(_member == null)
+                {
+                    Snackbar.Add("Customer is not a member.", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+                    return;
+                }
+                else
+                {
+                    if(_member.IsRegularMember == true){
+                        float discountAmount = _totalOrderAmount * 0.10f;
+                        _totalOrderAmount = _totalOrderAmount - discountAmount;
+                    }
+                    isMemberDialogVisible = true;
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+        }
+    }
+
+    private void ConfirmNormalOrder()
+    {
+
+        SalesService.CreateNormalSale(Number, DateTime.Now, _globalState.OrderItems, _totalOrderAmount);
+        Snackbar.Add("Confirm", Severity.Success);
+        _globalState.OrderItems.Clear();
+        NavManager.NavigateTo("/orders");
+
+
+    }
+
+    private void ConfirmMemberOrder()
+    {
+
+        if(_member.PurchaseCount >= 10)
+        {
+            _totalOrderAmount = 0;
+            SalesService.CreateMemberSale(_member.MemberId, Number, DateTime.Now, _globalState.OrderItems, _totalOrderAmount);
+            MembersService.ResetPurchaseCount(Number);
+            isRedeemDialogVisible = true;
+            return;
+        }
+        else
+        {
+            SalesService.CreateMemberSale(_member.MemberId, Number, DateTime.Now, _globalState.OrderItems, _totalOrderAmount);
+            MembersService.IncreasePurchaseCount(Number);
+
+            Snackbar.Add("Confirmed Order", Severity.Success);
+            
+        }
+        _globalState.OrderItems.Clear();
+        NavManager.NavigateTo("/orders");
+    }
+
+    private void CancelOrder()
+    {
+        _globalState.OrderItems.Clear();
+        Snackbar.Add("Order is Cancelled", Severity.Info);
+        NavManager.NavigateTo("/orders");
+       
+    }
+}

@@ -1,5 +1,6 @@
 ﻿@page "/members"
 @inject NavigationManager NavManager
+@inject IDialogService Diaglog
 
 @using BisleriumCafe.Data
 @using BisleriumCafe.Data.Services
@@ -7,7 +8,7 @@
 @inject ISnackbar Snackbar
 
 <MudContainer>
-    <MudButton Class="position-absolute"  Variant="Variant.Filled" OnClick="ToggleAddMemberPopover">Add Drink</MudButton>
+    <MudButton Class="position-absolute" Variant="Variant.Filled" OnClick="OpenDialog">Add Member</MudButton>
 </MudContainer>
 <MudContainer Class="mt-8">    
     <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllMembers" Hover="true" Striped="false" Filter="new Func<Member,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
@@ -22,44 +23,51 @@
             <MudTh><MudTableSortLabel SortBy="new Func<Member, object>(invItem => invItem.Number)">Phone Number</MudTableSortLabel></MudTh>
             <MudTh>First Name</MudTh>
             <MudTh>Last Name</MudTh>
+            <MudTh>Purchase Count</MudTh>
+            <MudTh>Regularity</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Number">@context.Number</MudTd>
             <MudTd DataLabel="First Name">@context.FirstName</MudTd>
             <MudTd DataLabel="Last Name">@context.LastName</MudTd>
+            <MudTd DataLabel="Purchase Count">@context.PurchaseCount</MudTd>
+            <MudTd DataLabel="Regularity">@context.IsRegularMember</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager />
         </PagerContent>
     </MudTable>
-    
 </MudContainer>
 
-<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showAddMemberPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
-    <MudForm Model="@MemberModel" @ref="AddMemberForm">
-        <MudCardHeader><MudText Typo="Typo.h4">Add Member</MudText></MudCardHeader>
-        <MudCardContent>
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+     <DialogContent>
+        <div style="width:500px;" class="d-flex flex-column gap-y-3">
             <MudTextField @bind-Value="number" T="string" Required="true" Label="Number" RequiredError=" Number is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="firstName" T="string" Required="true" Label="First Name" RequiredError=" First name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="lastName" T="string" Required="true" Label="Last Name" RequiredError=" Last name is required!" Variant="Variant.Outlined" />
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddMember">Add</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddMemberPopover">Close</MudButton>
-        </MudCardActions>
-    </MudForm>
-</MudPopover>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddMember">Add</MudButton>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
 
-@code{
+    @code{
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+
     private IEnumerable<Member> AllMembers = new List<Member>();
-    MudForm AddMemberForm;
+
     private string number { get; set; }
     private string firstName { get; set; }
     private string lastName { get; set; }
     private Member MemberModel { get; set; }
 
+    private bool visible;
 
 
     protected override async Task OnInitializedAsync()
@@ -76,7 +84,6 @@
     private string toSearch = ""; //String to use for searching in the table
     private Member selectedItem = null;
 
-    private bool showAddMemberPopOver = false;
 
     private bool FilterHandler(Member item) => SearchFilter(item, toSearch);
 
@@ -88,26 +95,34 @@
             return true;
         return false;
     }
-    private void ToggleAddMemberPopover()
-    {
-        showAddMemberPopOver = !showAddMemberPopOver;
-    }
+
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+    private void OpenDialog() => visible = true;
+
+    private void closeDialogBox() => visible = false;
+
+    private void Cancel() => visible = false;
+
 
     private async Task HandleAddMember()
     {
         try
         {
             MembersService.Create(firstName, lastName, number);
-            if (_globalState.CurrentUser != null)
-            {
-                NavManager.NavigateTo("/products");
-            }
-            
+            Snackbar.Add("Member Created !", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            Reload();
+            visible = false;
         }
         catch (Exception e)
         {
             Snackbar.Add("Incorrect !", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
-            AddMemberForm.Reset();
+           
         }
+    }
+
+    private async void Reload()
+    {
+        AllMembers = MembersService.GetAll();
+        StateHasChanged();
     }
 }

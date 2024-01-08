@@ -5,23 +5,23 @@
 @using BisleriumCafe.Data.Services
 @using BisleriumCafe.Data.Models
 @inject ISnackbar Snackbar
-
+@using System.ComponentModel.DataAnnotations
 
 
 <MudContainer>
-@if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
-            {
-                <MudButton Class="position-absolute"  Variant="Variant.Filled" OnClick="ToggleAddDrinkPopover">Add Drink</MudButton>
-                <MudButton Class="position-absolute"  Style="top: 60px; right:60px;" Variant="Variant.Filled" OnClick="ToggleAddExtraPopover">Add Extra</MudButton>
-            }   
+    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
+    {
+        <MudButton Class="position-absolute" Variant="Variant.Filled" OnClick="ToggleAddDrinkPopover">Add Drink</MudButton>
+        <MudButton Class="position-absolute" Style="top: 60px; right:60px;" Variant="Variant.Filled" OnClick="ToggleAddExtraPopover">Add Extra</MudButton>
+    }
 </MudContainer>
-<MudContainer Class="mt-8">    
+<MudContainer Class="mt-8">
     <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllProducts" Hover="true" Striped="false" Filter="new Func<Product,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Products</MudText>
             <MudSpacer />
-           
-            <MudSpacer/>
+
+            <MudSpacer />
             <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
         </ToolBarContent>
         <HeaderContent>
@@ -32,14 +32,12 @@
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
-            <MudTd DataLabel="Type">@context.ProductType</MudTd>
-            <MudTd DataLabel="Price">@context.Price</MudTd>
-            @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
+                <MudTd DataLabel="Type">@context.ProductType</MudTd>
+                <MudTd DataLabel="Price">@context.Price</MudTd>
+                @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
             {
                 <MudTd DataLabel="Actions">
-
-                    <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Rounded.Edit" OnClick="ToggleEditPopover">Edit</MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Remove">Delete</MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Rounded.Edit" OnClick="@(() => ProcessEditDetails(context.ProductId.ToString()))">Edit</MudButton>
                 </MudTd>
             }
         </RowTemplate>
@@ -47,12 +45,12 @@
             <MudTablePager />
         </PagerContent>
     </MudTable>
-    
+
 </MudContainer>
 
 <MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showAddDrinkPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
     <MudForm Model="@ProductModel" @ref="AddProductForm">
-        <MudCardHeader><MudText Typo="Typo.h4">Add Item</MudText></MudCardHeader>
+        <MudCardHeader><MudText Typo="Typo.h4">Add Drink</MudText></MudCardHeader>
         <MudCardContent>
             <MudTextField @bind-Value="productName" T="string" Required="true" Label="Product Name" RequiredError=" Product name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="price" Label="Price" Type="InputType.Number" Required="true" RequiredError="Price is required!" Variant="Variant.Outlined" />
@@ -66,7 +64,7 @@
 
 <MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showAddExtraPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
     <MudForm Model="@ProductModel" @ref="AddProductForm">
-        <MudCardHeader><MudText Typo="Typo.h4">Add Item</MudText></MudCardHeader>
+        <MudCardHeader><MudText Typo="Typo.h4">Add Ins</MudText></MudCardHeader>
         <MudCardContent>
             <MudTextField @bind-Value="productName" T="string" Required="true" Label="Product Name" RequiredError=" Product name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="price" Label="Price" Type="InputType.Number" Required="true" RequiredError="Price is required!" Variant="Variant.Outlined" />
@@ -78,11 +76,9 @@
     </MudForm>
 </MudPopover>
 
-<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showEditPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
-    <h1>hi</h1>
-</MudPopover>
 
-@code{
+
+@code {
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
     private IEnumerable<Product> AllProducts = new List<Product>();
@@ -92,7 +88,7 @@
     private ProductType prodtype { get; set; }
     private Product ProductModel { get; set; }
 
-
+    private string _activeItem = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -130,8 +126,9 @@
     {
         showAddExtraPopOver = !showAddExtraPopOver;
     }
-    private void ToggleEditPopover()
+    private void ToggleEditPopover(String id)
     {
+        _activeItem = id;
         showEditPopOver = !showEditPopOver;
     }
 
@@ -144,7 +141,7 @@
             {
                 NavManager.NavigateTo("/products");
             }
-            
+
         }
         catch (Exception e)
         {
@@ -170,22 +167,14 @@
         }
     }
 
-    private async Task HandleEditProduct()
-    {
-        try
-        {
-            //ProductsService.Update(productName, ProductType.AddIn, price);
-            if (_globalState.CurrentUser != null)
-            {
-                NavManager.NavigateTo("/products");
-            }
 
-        }
-        catch (Exception e)
-        {
-            Snackbar.Add("Incorrect !", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
-            AddProductForm.Reset();
-        }
+
+    private void ProcessEditDetails(string productID)
+    {
+
+        NavManager.NavigateTo($"edit-product/{productID}");
     }
+
+    
 
 }

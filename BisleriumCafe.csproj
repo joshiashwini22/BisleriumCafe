@@ -19,6 +19,7 @@
         <ApplicationId>com.companyname.bisleriumcafe</ApplicationId>
         <ApplicationIdGuid>A338701C-783F-4CF0-96F8-88D250592A5B</ApplicationIdGuid>
 
+		
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <ApplicationVersion>1</ApplicationVersion>

@@ -59,9 +59,29 @@ public static class MembersService
         return members;
     }
 
-    public static Member GetById(string number)
+    public static Member GetByNumber(string number)
     {
         List<Member> numbers = GetAll();
         return numbers.FirstOrDefault(x => x.Number == number);
+    }
+
+    public static void IncreasePurchaseCount(string number)
+    {
+        List<Member> members = GetAll();
+        Member member = members.FirstOrDefault(x => x.Number == number);
+
+        member.PurchaseCount++;
+
+        SaveAll(members);
+    }
+
+    public static void ResetPurchaseCount(string number)
+    {
+        List<Member> members = GetAll();
+        Member member = members.FirstOrDefault(x => x.Number == number);
+
+        member.PurchaseCount = 0;
+
+        SaveAll(members);
     }
 }

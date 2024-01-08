@@ -31,8 +31,8 @@
     private GlobalState _globalState { get; set; }
     private bool _showDefaultCredentials { get; set; }
     MudForm LoginForm;
-    private string Username { get; set; }
-    private string Password { get; set; }
+    private string Username { get; set; } = "admin";
+    private string Password { get; set; } = "admin";
 
     protected override void OnInitialized()
     {

@@ -74,21 +74,27 @@ public static class ProductsService
         return products;
     }
 
-    public static List<Product> Update(Guid productId, string productName, ProductType productType, float price)
+    public static List<Product> Update(String productId, float price)
     {
         List<Product> products = GetAll();
-        Product productToUpdate = products.FirstOrDefault(x => x.ProductId == productId);
+        Product productToUpdate = products.FirstOrDefault(x => x.ProductId.ToString() == productId);
 
         if (productToUpdate == null)
         {
             throw new Exception("Product not found.");
         }
 
-        productToUpdate.ProductName = productName;
-        productToUpdate.ProductType = productType;
         productToUpdate.Price = price;
         SaveAll(products);
         return products;
     }
+
+    public static Product GetProductByID(string productId)
+    {
+        List<Product> products = GetAll();
+
+        return products.FirstOrDefault(x => x.ProductId.ToString() == productId);
+    }
+
 
 }

@@ -7,11 +7,11 @@ namespace BisleriumCafe.Data.Utils
         public static string GetAppDirectoryPath()
         {
             Debug.WriteLine(Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 "Bislerium-Products"
                 ));
             return Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
                 "Bislerium-Products"
                 );
 
@@ -28,6 +28,14 @@ namespace BisleriumCafe.Data.Utils
         public static string GetAppMembersFilePath()
         {
             return Path.Combine(GetAppDirectoryPath(), "members.json");
+        }
+        public static string GetOrderItemsFilePath()
+        {
+            return Path.Combine(GetAppDirectoryPath(), "orderItems.json");
+        }
+        public static string GetSalesFilePath()
+        {
+            return Path.Combine(GetAppDirectoryPath(), "sales.json");
         }
     }
 }
