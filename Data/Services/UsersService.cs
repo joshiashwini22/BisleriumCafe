@@ -26,6 +26,7 @@ public static class UsersService
         var json = JsonSerializer.Serialize(users);
         File.WriteAllText(appUsersFilePath, json);
     }
+
     public static List<User> GetAll()
     {
         string appUsersFilePath = Explorer.GetAppUsersFilePath();
@@ -56,10 +57,27 @@ public static class UsersService
         SaveAll(users);
         return users;
     }
+
+    public static List<User> CreateSeedUser(Guid userId, string username, string password, Role role)
+    {
+        List<User> user = new List<User>();
+
+
+        user.Add(
+            new User
+            {
+                Username = username,
+                HashedPassword = Hasher.HashedSecret(password),
+                Role = role,
+                CreatedBy = userId
+            }
+        );
+        SaveAll(user);
+        return user;
+    }
     public static void SeedUsers()
     {
-        var users = GetAll().FirstOrDefault(x => x.Role == Role.Admin);
-        Create(Guid.Empty, SeedUsername, SeedPassword, Role.Admin);
+        CreateSeedUser(Guid.Empty, SeedUsername, SeedPassword, Role.Admin);
     }
 
     public static void SeedStaff()
@@ -112,33 +130,24 @@ public static class UsersService
         return user;
     }
 
-    public static User ChangePassword(Guid id, string currentPassword, string newPassword)
+    public static bool ValidateAdministrator(string password)
     {
-        if (currentPassword == newPassword)
-        {
-            throw new Exception("New password must be different from current password.");
-        }
-
+        var loginErrorMessage = "Invalid username or password.";
         List<User> users = GetAll();
-        User user = users.FirstOrDefault(x => x.ID == id);
+        string username = "admin";
+        User user = users.FirstOrDefault(x => x.Username == username);
 
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new Exception(loginErrorMessage);
         }
 
-        bool passwordIsValid = Hasher.VerifyHashedSecret(currentPassword, user.HashedPassword);
+        bool passwordIsValid = Hasher.VerifyHashedSecret(password, user.HashedPassword);
 
         if (!passwordIsValid)
         {
-            throw new Exception("Incorrect current password.");
+            throw new Exception(loginErrorMessage);
         }
-
-        user.HashedPassword = Hasher.HashedSecret(newPassword);
-        user.HasInitialPassword = false;
-        SaveAll(users);
-
-        return user;
+        return passwordIsValid;
     }
-
 }

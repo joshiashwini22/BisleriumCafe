@@ -2,6 +2,7 @@
 using BisleriumCafe.Data.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
+using QuestPDF.Infrastructure;
 
 
 
@@ -27,6 +28,7 @@ namespace BisleriumCafe
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
+            QuestPDF.Settings.License = LicenseType.Community;
             builder.Services.AddMudServices();
             return builder.Build();
         }

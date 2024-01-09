@@ -2,38 +2,52 @@
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-5" OnClick="goBack">
-    Back
-</MudButton>
-
-<h1>Edit Coffee Details</h1>
-
-@if (!string.IsNullOrEmpty(_errorMessage))
-{
-    <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
-}
+<MudContainer Class="mt-8">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="pb-5, mx-4" OnClick="goBack">
+        Back
+    </MudButton>
 
 
-@if (product != null)
-{
-    <div class="container-fluid mt-5">
-        <div class="row">
-            <div class="col-6 d-flex flex-column gap-y-3">
-                <MudTextField @bind-Value="product.Price" Label="Price" Variant="Variant.Outlined"></MudTextField>
-                <div>
-                    <MudButton Variant="Variant.Filled" DisableElevation="true" Color="Color.Primary" Class="mt-5" OnClick="handleUpdateCoffeeDetails">
-                        Update Price
-                    </MudButton>
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    }
+
+    <MudSpacer/>
+
+    @if (product != null)
+    {
+        <div class="container-fluid mt-5">
+            <div class="row">
+                <div class="col-6 d-flex flex-column gap-y-3">
+                    <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Edit Product Details</MudText></MudCardHeader>
+                    <MudText>Product name: @product.ProductName</MudText>
+                    <MudTextField @bind-Value="product.Price" Label="Price" Variant="Variant.Outlined"></MudTextField>
+                    <div>
+                        <MudButton Variant="Variant.Filled" DisableElevation="true" Color="Color.Primary" Class="mt-5" OnClick="handleUpdate">
+                            Update Price
+                        </MudButton>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-}
-else
-{
-    <MudAlert Severity="Severity.Error">Invalid Coffee ID</MudAlert>
-}
-
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Error">Invalid Coffee ID</MudAlert>
+    }
+</MudContainer>
+<MudDialog @bind-IsVisible="isVisible" Options="dialogOptions">
+    <DialogContent>
+        <MudCardContent>
+            <MudTextField @bind-Value="Password" T="string" Label="Password" Required="true" RequiredError="Password is required!" InputType="InputType.Password" Variant="Variant.Outlined" />
+        </MudCardContent>
+    </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="ConfirmAdminDetails" Color="Color.Primary">Confirm</MudButton>
+            <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
+        </DialogActions>
+    </MudDialog>
 
 
 
@@ -46,9 +60,13 @@ else
 
     private string _errorMessage { get; set; } = "";
 
+
     private Product product { get; set; }
 
-    private string _currentPassword { get; set; }
+    private string Password { get; set; }
+    private bool isVisible;
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+
 
     protected override void OnInitialized()
     {
@@ -60,23 +78,44 @@ else
         NavManager.NavigateTo("/products");
     }
 
-    protected void handleUpdateCoffeeDetails()
+    private void Cancel()
+    {
+        NavManager.NavigateTo("/products");
+    }
+
+    protected void handleUpdate()
+    {
+        isVisible = true;
+    }
+    protected void ConfirmAdminDetails()
     {
         try
         {
-            if (product.Price <= 0)
+            if (UsersService.ValidateAdministrator(Password))
             {
-                _errorMessage = "Please enter valid price";
-                return;
+                Snackbar.Add("Administrator Verified", Severity.Success);
+                isVisible = false;
+                if (product.Price <= 0)
+                {
+                    _errorMessage = "Please enter valid price";
+                    return;
+                }
+
+                ProductsService.Update(productId, product.Price);
+
+                _errorMessage = "";
+
+                Snackbar.Add("Product detail updated sucessfully", Severity.Success);
+                goBack();
             }
-
-         
-            ProductsService.Update(productId, product.Price);
-
-            _errorMessage = "";
-
-            Snackbar.Add("Coffee Details is updated sucessfully", Severity.Success);
-            goBack();
+            else if (Password == null)
+            {
+                Snackbar.Add("Enter Password", Severity.Info);
+            }
+            else
+            {
+                Snackbar.Add("Invalid Password", Severity.Error);
+            }
         }
         catch (Exception ex)
         {

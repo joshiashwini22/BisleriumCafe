@@ -8,7 +8,7 @@
 @using System.ComponentModel.DataAnnotations
 
 
-<MudContainer>
+<MudContainer Class="mt-8">
     <div class="row">
         <div class="col">
             <MudContainer>
@@ -31,7 +31,7 @@
                             <MudTd DataLabel="Type">@context.ProductType</MudTd>
                             <MudTd DataLabel="Price">@context.Price</MudTd>
                             <MudTd DataLabel="Actions">
-                                <MudButton Variant="Variant.Filled" OnClick="@(() => handleAddItemInCart(context.ProductId, context.ProductName, context.ProductType.ToString(), context.Price))">Add To Cart</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => handleAddItemInCart(context.ProductId, context.ProductName, context.ProductType.ToString(), context.Price))">Add To Cart</MudButton>
                             </MudTd>
                     </RowTemplate>
                     <PagerContent>
@@ -68,7 +68,7 @@
                 </MudTable>
                 @if(@_globalState.OrderItems.Count == 0)
                 {
-                    <h1>Cart is empty.</h1>
+                    <MudText Typo="Typo.h6" Class="mt-4 mx-auto">Cart is Empty</MudText>
                 }
                 else
                 {
@@ -81,9 +81,6 @@
         </div>
     </div>
 </MudContainer>
-
-
-
 
     @code {
     [CascadingParameter]

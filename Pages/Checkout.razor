@@ -6,24 +6,27 @@
 @using BisleriumCafe.Data.Models
 @inject ISnackbar Snackbar
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mb-5" OnClick="goBack">
-    Back
-</MudButton>
-<h1>Checkout</h1>
-<MudForm @ref="AddMemberForm">
-    <MudCard Elevation="3" Class="py-5">
-        <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Member</MudText></MudCardHeader>
-        <MudCardContent>
-            <MudTextField @bind-Value="Number" T="string" Label="Number" Variant="Variant.Outlined" />
-            <MudButton Variant="Variant.Filled" DisableElevation="true" Color="Color.Primary" Class="mt-5" OnClick="handleVerification">Verify Membership</MudButton>
-        </MudCardContent>
-    </MudCard>
-</MudForm>
+<MudContainer Class="mt-8">
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="pb-5, mx-4" OnClick="goBack">
+        Back
+    </MudButton>
+    <MudForm @ref="AddMemberForm">
+        <MudCard Elevation="3" Class="py-5, mt-8">
+            <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Member Verification</MudText></MudCardHeader>
+            <MudCardContent Class="justify-content-center">
+                <MudTextField @bind-Value="Number" T="string" Label="Number" Variant="Variant.Outlined"/>
+                <MudButton Variant="Variant.Filled" DisableElevation="true" Color="Color.Primary" Class="mt-5" OnClick="handleVerification">Verify Membership</MudButton>
+            </MudCardContent>
+        </MudCard>
+    </MudForm>
+</MudContainer>
 
 <MudDialog @bind-IsVisible="isNormalDialogVisible" Options="dialogNormalOptions">
     <DialogContent>
         <div class="d-flex flex-column gap-y-3">
-            <MudText Typo="Typo.h4">Your Order Total is: @_totalOrderAmount</MudText>
+            <MudText Typo="Typo.h4">Hi Customer</MudText>
+                <MudText Typo="Typo.h4">Your Order Total is: @_totalOrderAmount</MudText>
+                <MudText> Please Confirm Order </MudText>
         </div>
     </DialogContent>
     <DialogActions>
@@ -35,7 +38,13 @@
 <MudDialog @bind-IsVisible="isMemberDialogVisible" Options="dialogMemberOptions">
     <DialogContent>
         <div class="d-flex flex-column gap-y-3">
+            <MudText Typo="Typo.h4">Hi @_member.FirstName @_member.LastName</MudText>
+            @if (isRegularCustomer.Equals(true))
+            {
+                <MudText Typo="Typo.h4">Kudos on becoming a regular member!</MudText>
+            }
             <MudText Typo="Typo.h4">Your Order Total is: @_totalOrderAmount</MudText>
+            <MudText> Please Confirm Order </MudText>
         </div>
     </DialogContent>
     <DialogActions>
@@ -47,11 +56,12 @@
 <MudDialog @bind-IsVisible="isRedeemDialogVisible" Options="dialogRedeemOptions">
     <DialogContent>
         <div class="d-flex flex-column gap-y-3">
-            <MudText Typo="Typo.h4">Redeem Coffee</MudText>
+            <MudText Typo="Typo.h4">Yay! Redeem Coffee</MudText>
+            <MudText Typo="Typo.h5">One drink on the house :) </MudText>
         </div>
     </DialogContent>
     <DialogActions>
-            <MudButton OnClick="CloseDialog3" Color="Color.Secondary">Close</MudButton>
+            <MudButton OnClick="CloseDialog3" Color="Color.Secondary">OK</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -63,6 +73,8 @@
     private string Number { get; set; }
     private Member _member { get; set; }
     private bool _isValidMember { get; set; }
+    private bool isRegularCustomer { get; set; }
+    private float discountAmount { get; set; }
 
     private string _errorMessage { get; set; } = "";
 
@@ -72,7 +84,6 @@
     private DialogOptions dialogRedeemOptions = new() { FullWidth = true };
     private DialogOptions dialogNormalOptions = new() { FullWidth = true };
     private DialogOptions dialogMemberOptions = new() { FullWidth = true };
-
 
     private void CloseDialog1()
     {
@@ -129,9 +140,14 @@
                 }
                 else
                 {
+                    isRegularCustomer = SalesService.IsRegularMember(Number);
+                    _member.IsRegularMember = isRegularCustomer;
+                    Snackbar.Add($"{ isRegularCustomer}", Severity.Info, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+
                     if(_member.IsRegularMember == true){
-                        float discountAmount = _totalOrderAmount * 0.10f;
+                        discountAmount = _totalOrderAmount * 0.10f;
                         _totalOrderAmount = _totalOrderAmount - discountAmount;
+                        StateHasChanged();
                     }
                     isMemberDialogVisible = true;
                     return;
@@ -146,7 +162,7 @@
 
     private void ConfirmNormalOrder()
     {
-
+        Number = "N/A";
         SalesService.CreateNormalSale(Number, DateTime.Now, _globalState.OrderItems, _totalOrderAmount);
         Snackbar.Add("Confirm", Severity.Success);
         _globalState.OrderItems.Clear();
@@ -160,7 +176,6 @@
 
         if(_member.PurchaseCount >= 10)
         {
-            _totalOrderAmount = 0;
             SalesService.CreateMemberSale(_member.MemberId, Number, DateTime.Now, _globalState.OrderItems, _totalOrderAmount);
             MembersService.ResetPurchaseCount(Number);
             isRedeemDialogVisible = true;

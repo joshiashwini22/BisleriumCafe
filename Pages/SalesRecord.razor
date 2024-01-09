@@ -1,0 +1,97 @@
+﻿@page "/sales"
+
+@inject NavigationManager NavManager
+
+@using BisleriumCafe.Data
+@using BisleriumCafe.Data.Services
+@using BisleriumCafe.Data.Models
+@inject ISnackbar Snackbar
+
+
+
+<MudContainer Class="mt-8">
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@FilteredSales" Hover="true" Striped="false" >
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Sales</MudText>
+            <MudSpacer />
+            <MudSpacer />
+            <MudDatePicker @bind-Date="@searchDate" Label="Select Date" />
+            <MudSpacer />
+            <MudDatePicker @bind-Date="@searchMonth" Label="Select Month" Picker="DatePickerType.Month" />
+            <MudSpacer />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyFilter">Apply Filter</MudButton>
+            <MudSpacer/>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ResetFilter">Reset Filter</MudButton>
+            <MudSpacer />
+            
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Sales Id</MudTh>
+            <MudTh>Member Phone Number</MudTh>
+            <MudTh>Order Date</MudTh>
+            <MudTh>Order Items</MudTh>
+            <MudTh>Order Total</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.SalesId</MudTd>
+            <MudTd>@context.Number</MudTd>
+            <MudTd>@context.OrderDate.ToString("MMMM dd, yyyy HH:mm:ss")</MudTd>
+            <MudTd>
+                @foreach (var orderItem in context.OrderItems)
+                {
+                    <div>
+                    Product Name: @orderItem.ItemName | Quantity: @orderItem.Quantity
+                    </div>
+                }
+            </MudTd>
+            <MudTd>@context.OrderTotal</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+
+    @code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private IEnumerable<Sales> AllSales = new List<Sales>();
+    private IEnumerable<Sales> PDFData = new List<Sales>();
+
+    private IEnumerable<Sales> FilteredSales = new List<Sales>();
+    private DateTime? searchDate;
+    private DateTime? searchMonth;
+
+    private Sales selectedItem = null;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+
+        AllSales = SalesService.GetAll();
+        FilteredSales = AllSales.ToList();
+
+    }
+    private void ApplyFilter()
+    {
+        FilteredSales = AllSales
+            .Where(s => searchDate == null || s.OrderDate.Date == searchDate.Value.Date)
+            .Where(s => searchMonth == null || (s.OrderDate.Month == searchMonth.Value.Month && s.OrderDate.Year == searchMonth.Value.Year))
+            .ToList();
+    }
+
+    private void ResetFilter()
+    {
+        searchDate = null;
+        searchMonth = null;
+        FilteredSales = AllSales.ToList();
+        StateHasChanged();
+    }
+    
+}

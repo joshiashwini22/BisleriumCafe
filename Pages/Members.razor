@@ -7,10 +7,11 @@
 @using BisleriumCafe.Data.Models
 @inject ISnackbar Snackbar
 
-<MudContainer>
-    <MudButton Class="position-absolute" Variant="Variant.Filled" OnClick="OpenDialog">Add Member</MudButton>
-</MudContainer>
+
 <MudContainer Class="mt-8">    
+    <MudToolBar>
+        <MudButton Class="position-absolute" Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenDialog">Add Member</MudButton>
+    </MudToolBar>
     <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllMembers" Hover="true" Striped="false" Filter="new Func<Member,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Members</MudText>

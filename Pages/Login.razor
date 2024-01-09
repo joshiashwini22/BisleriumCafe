@@ -38,11 +38,17 @@
     {
         try
         {
+            UsersService.SeedUsers();
+            UsersService.SeedStaff();
             var user = UsersService.Login(UsersService.SeedUsername, UsersService.SeedPassword);
             var staff = UsersService.Login(UsersService.SeedUsernameStaff, UsersService.SeedPasswordStaff);
-            _showDefaultCredentials = user.HasInitialPassword;
+            _showDefaultCredentials = true;
         }
-        catch { }
+        catch (Exception e)
+        {
+            Snackbar.Add("Error occured", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+
+        }
 
         _globalState.CurrentUser = null;
     }

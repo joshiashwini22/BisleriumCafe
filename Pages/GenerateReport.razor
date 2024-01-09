@@ -1,0 +1,53 @@
+﻿@page "/reports"
+
+@inject NavigationManager NavManager
+
+@using BisleriumCafe.Data
+@using BisleriumCafe.Data.Services
+@using BisleriumCafe.Data.Models
+@inject ISnackbar Snackbar
+
+<MudContainer>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Report" OnClick="handleDailyReport">Daily Report</MudButton>
+    <MudSpacer />
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Report" OnClick="handleMonthlyReport">Monthly Report</MudButton>
+</MudContainer>
+
+@code {
+    [CascadingParameter]
+    private GlobalState _globalState { get; set; }
+    private IEnumerable<Sales> AllSales = new List<Sales>();
+    private IEnumerable<Sales> PDFData = new List<Sales>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_globalState.CurrentUser == null)
+        {
+            NavManager.NavigateTo("/login");
+        }
+
+        AllSales = SalesService.GetAll();
+
+    }
+    private void handleDailyReport()
+    {
+        try
+        {
+            PDFData = SalesService.GetSalesItemByProductType(ProductType.Drink);
+
+
+            //PDFService.SavePDF();
+            Snackbar.Add($"{PDFData},Oi pdf.", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("NoPDF", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+        }
+
+    }
+    private void handleMonthlyReport()
+    {
+
+    }
+}

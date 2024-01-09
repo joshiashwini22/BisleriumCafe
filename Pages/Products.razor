@@ -7,28 +7,30 @@
 @inject ISnackbar Snackbar
 @using System.ComponentModel.DataAnnotations
 
-
-<MudContainer>
-    @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
-    {
-        <MudButton Class="position-absolute" Variant="Variant.Filled" OnClick="ToggleAddDrinkPopover">Add Drink</MudButton>
-        <MudButton Class="position-absolute" Style="top: 60px; right:60px;" Variant="Variant.Filled" OnClick="ToggleAddExtraPopover">Add Extra</MudButton>
-    }
-</MudContainer>
+ 
 <MudContainer Class="mt-8">
     <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllProducts" Hover="true" Striped="false" Filter="new Func<Product,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Products</MudText>
             <MudSpacer />
-
-            <MudSpacer />
             <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+            <MudSpacer/>
+            @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
+            {
+                <MudButton Variant="Variant.Outlined" OnClick="ToggleAddDrinkDialog" Color="Color.Primary">Add Drink</MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" OnClick="ToggleAddExtraDialog" Color="Color.Primary">Add Extra</MudButton>
+                <MudSpacer />
+            }
         </ToolBarContent>
         <HeaderContent>
             <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(invItem => invItem.ProductName)">Product Name</MudTableSortLabel></MudTh>
             <MudTh>Type</MudTh>
             <MudTh>Price</MudTh>
-            <MudTh>Actions</MudTh>
+            @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
+            {
+                <MudTh>Actions</MudTh>
+            }
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Product Name">@context.ProductName</MudTd>
@@ -45,38 +47,33 @@
             <MudTablePager />
         </PagerContent>
     </MudTable>
-
 </MudContainer>
 
-<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showAddDrinkPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
-    <MudForm Model="@ProductModel" @ref="AddProductForm">
-        <MudCardHeader><MudText Typo="Typo.h4">Add Drink</MudText></MudCardHeader>
-        <MudCardContent>
+<MudDialog @bind-IsVisible="isAddDrinkDialogVisible" Options="dialogAddDrinkOptions">
+    <DialogContent>
+        <div style="width:500px;" class="d-flex flex-column gap-y-3">
             <MudTextField @bind-Value="productName" T="string" Required="true" Label="Product Name" RequiredError=" Product name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="price" Label="Price" Type="InputType.Number" Required="true" RequiredError="Price is required!" Variant="Variant.Outlined" />
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddDrink">Add</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddDrinkPopover">Close</MudButton>
-        </MudCardActions>
-    </MudForm>
-</MudPopover>
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddDrink">Add</MudButton>
+        <MudButton OnClick="CloseDialog1">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
 
-<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="@showAddExtraPopOver" AnchorOrigin="Origin.CenterCenter" TransformOrigin="Origin.CenterCenter" Class="pa-4 rounded-3" Style="width:40%;">
-    <MudForm Model="@ProductModel" @ref="AddProductForm">
-        <MudCardHeader><MudText Typo="Typo.h4">Add Ins</MudText></MudCardHeader>
-        <MudCardContent>
+<MudDialog @bind-IsVisible="isAddExtraDialogVisible" Options="dialogAddExtraOptions">
+    <DialogContent>
+        <div style="width:500px;" class="d-flex flex-column gap-y-3">
             <MudTextField @bind-Value="productName" T="string" Required="true" Label="Product Name" RequiredError=" Product name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="price" Label="Price" Type="InputType.Number" Required="true" RequiredError="Price is required!" Variant="Variant.Outlined" />
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddExtra">Add</MudButton>
-            <MudButton ButtonType="ButtonType.Button" Variant="Variant.Filled" Color="Color.Secondary" Class="mt-4 mx-auto" OnClick="ToggleAddExtraPopover">Close</MudButton>
-        </MudCardActions>
-    </MudForm>
-</MudPopover>
-
-
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddExtra">Add</MudButton>
+        <MudButton OnClick="CloseDialog2">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     [CascadingParameter]
@@ -104,9 +101,28 @@
     private string toSearch = ""; //String to use for searching in the table
     private Product selectedItem = null;
 
-    private bool showAddDrinkPopOver = false;
-    private bool showAddExtraPopOver = false;
-    private bool showEditPopOver = false;
+    private bool isAddDrinkDialogVisible;
+    private bool isAddExtraDialogVisible;
+    private DialogOptions dialogAddDrinkOptions = new() { FullWidth = true };
+    private DialogOptions dialogAddExtraOptions = new() { FullWidth = true };
+
+    private void CloseDialog1()
+    {
+        isAddDrinkDialogVisible = false;
+    }
+
+    private void CloseDialog2()
+    {
+        isAddExtraDialogVisible = false;
+    }
+    private void ToggleAddDrinkDialog()
+    {
+        isAddDrinkDialogVisible = !isAddDrinkDialogVisible;
+    }
+    private void ToggleAddExtraDialog()
+    {
+        isAddExtraDialogVisible = !isAddExtraDialogVisible;
+    }
 
     private bool FilterHandler(Product item) => SearchFilter(item, toSearch);
 
@@ -118,56 +134,52 @@
             return true;
         return false;
     }
-    private void ToggleAddDrinkPopover()
-    {
-        showAddDrinkPopOver = !showAddDrinkPopOver;
-    }
-    private void ToggleAddExtraPopover()
-    {
-        showAddExtraPopOver = !showAddExtraPopOver;
-    }
-    private void ToggleEditPopover(String id)
-    {
-        _activeItem = id;
-        showEditPopOver = !showEditPopOver;
-    }
+
 
     private async Task HandleAddDrink()
     {
         try
         {
-            ProductsService.Create(productName, ProductType.Drink, price);
-            if (_globalState.CurrentUser != null)
+            if (string.IsNullOrEmpty(productName) || price<=0)
             {
-                NavManager.NavigateTo("/products");
+                Snackbar.Add("Please enter all values!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+                isAddDrinkDialogVisible = true;
             }
-
+            else
+            {
+                ProductsService.Create(productName, ProductType.Drink, price);
+                isAddDrinkDialogVisible = false;
+                Snackbar.Add("Drink is Added!", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            }
+            Reload();
         }
         catch (Exception e)
         {
-            Snackbar.Add("Incorrect !", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
-            AddProductForm.Reset();
+            Snackbar.Add("Incorrect values!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
         }
     }
     private async Task HandleAddExtra()
     {
         try
         {
-            ProductsService.Create(productName, ProductType.AddIn, price);
-            if (_globalState.CurrentUser != null)
+            if (string.IsNullOrEmpty(productName) || price<=0)
             {
-                NavManager.NavigateTo("/products");
+                Snackbar.Add("Please enter all values!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+                isAddExtraDialogVisible = true;
             }
-
+            else
+            {
+                ProductsService.Create(productName, ProductType.AddIn, price);
+                isAddExtraDialogVisible = false;
+                Snackbar.Add("Item is Added!", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            }
+            Reload();
         }
         catch (Exception e)
         {
-            Snackbar.Add("Incorrect !", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
-            AddProductForm.Reset();
+            Snackbar.Add("Incorrect values!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
         }
     }
-
-
 
     private void ProcessEditDetails(string productID)
     {
@@ -175,6 +187,10 @@
         NavManager.NavigateTo($"edit-product/{productID}");
     }
 
-    
+    private async void Reload()
+    {
+        AllProducts = ProductsService.GetAll();
+        StateHasChanged();
+    }
 
 }
