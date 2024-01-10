@@ -9,30 +9,26 @@
 
 
 <MudContainer Class="mt-8">    
-    <MudToolBar>
-        <MudButton Class="position-absolute" Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenDialog">Add Member</MudButton>
-    </MudToolBar>
     <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllMembers" Hover="true" Striped="false" Filter="new Func<Member,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Members</MudText>
             <MudSpacer />
-           
-            <MudSpacer/>
             <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+            <MudSpacer />
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="OpenDialog">Add Member</MudButton>
+            <MudSpacer/>
         </ToolBarContent>
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<Member, object>(invItem => invItem.Number)">Phone Number</MudTableSortLabel></MudTh>
-            <MudTh>First Name</MudTh>
-            <MudTh>Last Name</MudTh>
-            <MudTh>Purchase Count</MudTh>
-            <MudTh>Regularity</MudTh>
+            <MudTh><MudTableSortLabel Enabled="true" InitialDirection="SortDirection.Ascending" SortBy="new Func<Member, object>(x => x.Number)">Phone Number</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Member, object>(x=>x.FirstName)">First Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Member, object>(x=>x.LastName)">Last Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Member, object>(x=>x.PurchaseCount)">Purchase Count</MudTableSortLabel></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Number">@context.Number</MudTd>
             <MudTd DataLabel="First Name">@context.FirstName</MudTd>
             <MudTd DataLabel="Last Name">@context.LastName</MudTd>
             <MudTd DataLabel="Purchase Count">@context.PurchaseCount</MudTd>
-            <MudTd DataLabel="Regularity">@context.IsRegularMember</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager />
@@ -43,14 +39,15 @@
 <MudDialog @bind-IsVisible="visible" Options="dialogOptions">
      <DialogContent>
         <div style="width:500px;" class="d-flex flex-column gap-y-3">
+            <MudText Typo="Typo.h6">Please Enter Member Details</MudText>
             <MudTextField @bind-Value="number" T="string" Required="true" Label="Number" RequiredError=" Number is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="firstName" T="string" Required="true" Label="First Name" RequiredError=" First name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="lastName" T="string" Required="true" Label="Last Name" RequiredError=" Last name is required!" Variant="Variant.Outlined" />
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddMember">Add</MudButton>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mx-auto" OnClick="HandleAddMember">Add</MudButton>
+            <MudButton Variant="Variant.Filled" Class="mx-auto" OnClick="Cancel">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -116,7 +113,7 @@
         }
         catch (Exception e)
         {
-            Snackbar.Add("Incorrect !", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            Snackbar.Add("Incorrect Values!", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
            
         }
     }

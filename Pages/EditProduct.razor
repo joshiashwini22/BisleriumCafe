@@ -17,9 +17,9 @@
 
     @if (product != null)
     {
-        <div class="container-fluid mt-5">
+        <div class="container-fluid mt-5 justify-content-center ">
             <div class="row">
-                <div class="col-6 d-flex flex-column gap-y-3">
+                <div class="d-flex flex-column gap-y-3 justify-content-center">
                     <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Edit Product Details</MudText></MudCardHeader>
                     <MudText>Product name: @product.ProductName</MudText>
                     <MudTextField @bind-Value="product.Price" Label="Price" Variant="Variant.Outlined"></MudTextField>
@@ -37,15 +37,15 @@
         <MudAlert Severity="Severity.Error">Invalid Coffee ID</MudAlert>
     }
 </MudContainer>
-<MudDialog @bind-IsVisible="isVisible" Options="dialogOptions">
+<MudDialog @bind-IsVisible="isVisible" Options="dialogOptions" Class="justify-content-center">
     <DialogContent>
         <MudCardContent>
+            <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Verify Admin</MudText></MudCardHeader>
             <MudTextField @bind-Value="Password" T="string" Label="Password" Required="true" RequiredError="Password is required!" InputType="InputType.Password" Variant="Variant.Outlined" />
         </MudCardContent>
     </DialogContent>
         <DialogActions>
-            <MudButton OnClick="ConfirmAdminDetails" Color="Color.Primary">Confirm</MudButton>
-            <MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
+            <MudButton OnClick="ConfirmAdminDetails" Color="Color.Primary">Confirm</MudButton><MudButton OnClick="Cancel" Color="Color.Secondary">Cancel</MudButton>
         </DialogActions>
     </MudDialog>
 

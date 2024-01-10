@@ -21,9 +21,9 @@
                         <MudTextField T="string" @bind-Value="toSearch" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
                     </ToolBarContent>
                     <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(invItem => invItem.ProductName)">Product Name</MudTableSortLabel></MudTh>
-                        <MudTh>Type</MudTh>
-                        <MudTh>Price</MudTh>
+                        <MudTh><MudTableSortLabel Enabled="true" InitialDirection="SortDirection.Ascending" SortBy="new Func<Product, object>(x => x.ProductName)">Product Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.ProductType)">Type</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Price)">Price</MudTableSortLabel></MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>

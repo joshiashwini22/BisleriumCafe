@@ -80,23 +80,6 @@ public static class SalesService
 
         return sales.FirstOrDefault(x => x.SalesId.ToString() == saleid);
     }
-
-    public static IEnumerable<Sales> GetSalesItemByProductType(Enum productType)
-    {
-        List<Sales> sales = GetAll();
-
-        return sales
-            .Where(s => s.OrderItems.Any(item => item.ItemType == productType.ToString()))
-            .Select(s => new Sales
-            {
-                SalesId = s.SalesId,
-                OrderDate = s.OrderDate,
-                MemberId = s.MemberId,
-                Number = s.Number,
-                OrderTotal = s.OrderTotal,
-                OrderItems = s.OrderItems.Where(item => item.ItemType == productType.ToString()).ToList()
-            });
-    }
     public static bool IsRegularMember(string phoneNumber)
     {
         List<Sales> sales = GetAll();
@@ -115,8 +98,27 @@ public static class SalesService
             return false;
         }
     }
+    public static List<Sales> GetSalesItemByProductType(Enum productType, string orderDate)
+    {
+        List<Sales> sales = GetAll();
+        
 
-    private static float GetSalesRevenue(List<Sales> sales)
+        return sales
+            .Where(s => s.OrderItems.Any(item => item.ItemType.Equals(productType.ToString()) && orderDate.Equals(s.OrderDate.ToString("yyyy-MM-dd"))))
+
+            .ToList();
+    }
+    public static List<Sales> GetSalesItemByMonthProductType(Enum productType, string orderDate)
+    {
+        List<Sales> sales = GetAll();
+
+
+        return sales
+            .Where(s => s.OrderItems.Any(item => item.ItemType.Equals(productType.ToString()) && orderDate.Equals(s.OrderDate.ToString("yyyy-MM"))))
+
+            .ToList();
+    }
+    public static float GetSalesRevenue(List<Sales> sales)
     {
         float revenue = 0f;
         foreach (var sale in sales)
@@ -127,19 +129,48 @@ public static class SalesService
         return revenue;
     }
 
-    //private static List<Sales> GetTopFiveDrinks(List<Sales> sales) 
-    //{ 
-    //    return sales
-    //    .SelectMany(s => s.OrderItems)
-    //    .Where(item => item.ItemType.Equals("Drink"))
-    //    .GroupBy(item => item.ItemName)
-    //    .Select(group => new OrderItem
-    //    {
-    //        ItemName = group.Key,
-    //        Quantity = group.Sum(item => item.Quantity)
-    //    })
-    //    .OrderByDescending(item => item.Quantity)
-    //    .Take(5)
-    //    .ToList();
-    //}
+    public class DrinkSales
+    {
+        public string DrinkName { get; set; }
+        public int Quantity { get; set; }
+    }
+
+    public class AddInSales
+    {
+        public string AddInName { get; set; }
+        public int Quantity { get; set; }
+    }
+
+    public static List<DrinkSales> GetTopFiveDrinks(IEnumerable<Sales> sales)
+    {
+        var v = sales
+        .SelectMany(s => s.OrderItems);
+        var b = v
+        .Where(item => item.ItemType.Equals("Drink"));
+        var c = b.GroupBy(item => item.ItemName);
+        var d = c.Select(group => new DrinkSales
+        {
+            DrinkName = group.Key,
+            Quantity = group.Sum(item => item.Quantity)
+        });
+        var e = d.OrderByDescending(item => item.Quantity)
+        .Take(5)
+        .ToList();
+        return e;
+    }
+    public static List<AddInSales> GetTopFiveAddIns(IEnumerable<Sales> sales)
+    {
+        return sales
+        .SelectMany(s => s.OrderItems)
+        .Where(item => item.ItemType.Equals("AddIn"))
+        .GroupBy(item => item.ItemName)
+        .Select(group => new AddInSales
+        {
+            AddInName = group.Key,
+            Quantity = group.Sum(item => item.Quantity)
+        })
+        .OrderByDescending(item => item.Quantity)
+        .Take(5)
+        .ToList();
+    }
 }

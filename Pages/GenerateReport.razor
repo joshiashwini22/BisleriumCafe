@@ -5,19 +5,41 @@
 @using BisleriumCafe.Data
 @using BisleriumCafe.Data.Services
 @using BisleriumCafe.Data.Models
+@using System.Diagnostics
 @inject ISnackbar Snackbar
 
-<MudContainer>
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Report" OnClick="handleDailyReport">Daily Report</MudButton>
-    <MudSpacer />
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Report" OnClick="handleMonthlyReport">Monthly Report</MudButton>
+
+<MudContainer Class="mt-8">
+        <MudCard Elevation="3" Class="py-5, mt-8">
+            <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Daily Report</MudText></MudCardHeader>
+            <MudCardContent Class="justify-content-center">
+            <MudTextField T="string" Class="mt-0" Label="Filter By Date" InputType="InputType.Date" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FilterAlt" ValueChanged="(x) => FilterByDate(x)" />
+            <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Report" Class="mt-5" OnClick="handleDailyReport">Generate Daily Report</MudButton>
+            </MudCardContent>
+        </MudCard>
+</MudContainer>
+<MudContainer Class="mt-8">
+        <MudCard Elevation="3" Class="py-5, mt-8">
+            <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Monthly Report</MudText></MudCardHeader>
+            <MudCardContent Class="justify-content-center">
+            <MudTextField T="string" Class="mt-0" Label="Filter By Date" InputType="InputType.Month" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FilterAlt" ValueChanged="(x) => FilterByMonth(x)" />
+            <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" StartIcon="@Icons.Material.Rounded.Report" Class="mt-5" OnClick="handleMonthlyReport">Generate Monthly Report</MudButton>
+            </MudCardContent>
+        </MudCard>
 </MudContainer>
 
 @code {
     [CascadingParameter]
     private GlobalState _globalState { get; set; }
     private IEnumerable<Sales> AllSales = new List<Sales>();
-    private IEnumerable<Sales> PDFData = new List<Sales>();
+    private IEnumerable<Sales> FilteredSales = new List<Sales>();
+    private IEnumerable<Sales> AllDrinkSales = new List<Sales>();
+    private IEnumerable<Sales> AllAddInSales = new List<Sales>();
+    private bool isDailyReportGenerated;
+    private bool isMonthlyReportGenerated;
+    private string dateValue;
+    private string monthValue;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,15 +51,58 @@
         AllSales = SalesService.GetAll();
 
     }
+    private void FilterByDate(string x)
+    {
+        if (string.IsNullOrEmpty(x))
+        {
+            FilteredSales = AllSales;
+            return;
+        }
+        dateValue = x;
+        string[] date = x.Split('-');
+        FilteredSales = AllSales.Where(x => x.OrderDate.Year == int.Parse(date[0]) && x.OrderDate.Month == int.Parse(date[1]) && x.OrderDate.Day == int.Parse(date[2])).ToList();
+    }
+
+    private void FilterByMonth(string x)
+    {
+        if (string.IsNullOrEmpty(x))
+        {
+            FilteredSales = AllSales;
+            return;
+        }
+        monthValue = x;
+        string[] yearMonth = x.Split('-');
+        FilteredSales = AllSales.Where(x => x.OrderDate.Year == int.Parse(yearMonth[0]) && x.OrderDate.Month == int.Parse(yearMonth[1])).ToList();
+
+    }
     private void handleDailyReport()
     {
         try
         {
-            PDFData = SalesService.GetSalesItemByProductType(ProductType.Drink);
+            if (string.IsNullOrEmpty(dateValue))
+            {
+                Snackbar.Add("Select a date", Severity.Error);
+                return;
+            };
+            isDailyReportGenerated = false;
 
+            List<Sales> CurrentDayOrders = AllSales.Where(order => order.OrderDate.ToString("yyyy-MM-dd").Equals(dateValue)).ToList();
+            AllDrinkSales = SalesService.GetSalesItemByProductType(ProductType.Drink, dateValue).ToList();
+            AllAddInSales = SalesService.GetSalesItemByProductType(ProductType.AddIn, dateValue).ToList();
 
-            //PDFService.SavePDF();
-            Snackbar.Add($"{PDFData},Oi pdf.", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+            if (CurrentDayOrders.Count == 0)
+            {
+                Snackbar.Add("Cannot generate PDF. There are no sales on this date", Severity.Error);
+                return;
+            };
+            float totalSales = SalesService.GetSalesRevenue(CurrentDayOrders);
+            List<SalesService.DrinkSales> topFiveDrinks = SalesService.GetTopFiveDrinks(AllDrinkSales);
+            List<SalesService.AddInSales> topFiveAddIns = SalesService.GetTopFiveAddIns(AllAddInSales);
+
+            
+
+            PdfGenerationServices.SaveDailyPDF(CurrentDayOrders, dateValue, topFiveDrinks, topFiveAddIns, totalSales);
+            Snackbar.Add("Daily Report has been Generated", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
 
         }
         catch (Exception ex)
@@ -48,6 +113,37 @@
     }
     private void handleMonthlyReport()
     {
+        try
+        {
+            if (string.IsNullOrEmpty(monthValue))
+            {
+                Snackbar.Add("Select a month", Severity.Error);
+                return;
+            };
+            isDailyReportGenerated = false;
 
+            List<Sales> CurrentDayOrders = AllSales.Where(order => order.OrderDate.ToString("yyyy-MM").Equals(monthValue)).ToList();
+            AllDrinkSales = SalesService.GetSalesItemByMonthProductType(ProductType.Drink, monthValue).ToList();
+            AllAddInSales = SalesService.GetSalesItemByMonthProductType(ProductType.AddIn, monthValue).ToList();
+
+            if (CurrentDayOrders.Count == 0)
+            {
+                Snackbar.Add("Cannot generate PDF. There are no sales on this date", Severity.Error);
+                return;
+            };
+            float totalSales = SalesService.GetSalesRevenue(CurrentDayOrders);
+            List<SalesService.DrinkSales> topFiveDrinks = SalesService.GetTopFiveDrinks(AllDrinkSales);
+            List<SalesService.AddInSales> topFiveAddIns = SalesService.GetTopFiveAddIns(AllAddInSales);
+
+
+
+            PdfGenerationServices.SaveMonthlyPDF(CurrentDayOrders, monthValue, topFiveDrinks, topFiveAddIns, totalSales);
+            Snackbar.Add("Daily Report has been Generated", Severity.Success, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("NoPDF", Severity.Error, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
+        }
     }
 }

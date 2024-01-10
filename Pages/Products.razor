@@ -9,7 +9,7 @@
 
  
 <MudContainer Class="mt-8">
-    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllProducts" Hover="true" Striped="false" Filter="new Func<Product,bool>(FilterHandler)" @bind-SelectedItem="selectedItem">
+    <MudTable FixedHeader="true" FixedFooter="true" Height="450px" Items="@AllProducts" Hover="true" Striped="false" Filter="new Func<Product,bool>(FilterHandler)" @bind-SelectedItem="selectedItem" SortLabel="Sort By">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Products</MudText>
             <MudSpacer />
@@ -24,9 +24,9 @@
             }
         </ToolBarContent>
         <HeaderContent>
-            <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(invItem => invItem.ProductName)">Product Name</MudTableSortLabel></MudTh>
-            <MudTh>Type</MudTh>
-            <MudTh>Price</MudTh>
+            <MudTh><MudTableSortLabel Enabled="true" InitialDirection="SortDirection.Ascending" SortBy="new Func<Product, object>(x => x.ProductName)">Product Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.ProductType)">Type</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x => x.Price)">Price</MudTableSortLabel></MudTh>
             @if (_globalState.CurrentUser != null && _globalState.CurrentUser.Role == Role.Admin)
             {
                 <MudTh>Actions</MudTh>
@@ -49,29 +49,32 @@
     </MudTable>
 </MudContainer>
 
-<MudDialog @bind-IsVisible="isAddDrinkDialogVisible" Options="dialogAddDrinkOptions">
+<MudDialog @bind-IsVisible="isAddDrinkDialogVisible" Options="dialogAddDrinkOptions" Class="pb-4">
     <DialogContent>
-        <div style="width:500px;" class="d-flex flex-column gap-y-3">
-            <MudTextField @bind-Value="productName" T="string" Required="true" Label="Product Name" RequiredError=" Product name is required!" Variant="Variant.Outlined" />
+        <div style="width:500px;" class="d-flex flex-column">
+            <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Enter Drink Details</MudText></MudCardHeader>
+
+            <MudTextField @bind-Value="productName" T="string" Required="true" Label="Drink Name" RequiredError=" Drink name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="price" Label="Price" Type="InputType.Number" Required="true" RequiredError="Price is required!" Variant="Variant.Outlined" />
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddDrink">Add</MudButton>
-        <MudButton OnClick="CloseDialog1">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mx-auto" OnClick="HandleAddDrink">Add</MudButton>
+        <MudButton Variant="Variant.Filled" Class="mx-auto" OnClick="CloseDialog1">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
 
-<MudDialog @bind-IsVisible="isAddExtraDialogVisible" Options="dialogAddExtraOptions">
+<MudDialog @bind-IsVisible="isAddExtraDialogVisible" Options="dialogAddExtraOptions" Class="pb-4">
     <DialogContent>
-        <div style="width:500px;" class="d-flex flex-column gap-y-3">
-            <MudTextField @bind-Value="productName" T="string" Required="true" Label="Product Name" RequiredError=" Product name is required!" Variant="Variant.Outlined" />
+        <div style="width:500px;" class="d-flex flex-column">
+            <MudCardHeader Class="justify-content-center"><MudText Typo="Typo.h4">Enter Add-In Details</MudText></MudCardHeader>
+            <MudTextField @bind-Value="productName" T="string" Required="true" Label="Addin Name" RequiredError=" AddIn name is required!" Variant="Variant.Outlined" />
             <MudTextField @bind-Value="price" Label="Price" Type="InputType.Number" Required="true" RequiredError="Price is required!" Variant="Variant.Outlined" />
         </div>
     </DialogContent>
     <DialogActions>
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4 mx-auto" OnClick="HandleAddExtra">Add</MudButton>
-        <MudButton OnClick="CloseDialog2">Cancel</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mx-auto" OnClick="HandleAddExtra">Add</MudButton>
+        <MudButton Variant="Variant.Filled" Class="mx-auto" OnClick="CloseDialog2">Cancel</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -98,8 +101,7 @@
 
     }
 
-    private string toSearch = ""; //String to use for searching in the table
-    private Product selectedItem = null;
+    
 
     private bool isAddDrinkDialogVisible;
     private bool isAddExtraDialogVisible;
@@ -124,8 +126,13 @@
         isAddExtraDialogVisible = !isAddExtraDialogVisible;
     }
 
+    private string toSearch = ""; //String to used to search in  table
+    private Product selectedItem = null; //Initializing selected item from products
+
+    //Filters the item to search from elements in table
     private bool FilterHandler(Product item) => SearchFilter(item, toSearch);
 
+    //Checks if there is a value returned fron the search by passing the search string and product values
     private bool SearchFilter(Product item, string searchString)
     {
         if (string.IsNullOrWhiteSpace(searchString))

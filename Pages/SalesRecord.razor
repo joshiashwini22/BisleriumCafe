@@ -15,15 +15,10 @@
             <MudText Typo="Typo.h6">Sales</MudText>
             <MudSpacer />
             <MudSpacer />
-            <MudDatePicker @bind-Date="@searchDate" Label="Select Date" />
+            <MudTextField T="string" Class="mt-0" Label="Filter By Date" InputType="InputType.Date" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FilterAlt" ValueChanged="(x) => FilterByDate(x)" />
             <MudSpacer />
-            <MudDatePicker @bind-Date="@searchMonth" Label="Select Month" Picker="DatePickerType.Month" />
-            <MudSpacer />
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyFilter">Apply Filter</MudButton>
-            <MudSpacer/>
-            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="ResetFilter">Reset Filter</MudButton>
-            <MudSpacer />
-            
+            <MudTextField T="string" Class="mt-0" Label="Filter By Month" InputType="InputType.Month" Clearable="true" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.FilterAlt" ValueChanged="(x) => FilterByMonth(x)" />
+            <MudSpacer />           
         </ToolBarContent>
         <HeaderContent>
             <MudTh>Sales Id</MudTh>
@@ -78,20 +73,26 @@
         FilteredSales = AllSales.ToList();
 
     }
-    private void ApplyFilter()
+    private void FilterByDate(string x)
     {
-        FilteredSales = AllSales
-            .Where(s => searchDate == null || s.OrderDate.Date == searchDate.Value.Date)
-            .Where(s => searchMonth == null || (s.OrderDate.Month == searchMonth.Value.Month && s.OrderDate.Year == searchMonth.Value.Year))
-            .ToList();
+        if (string.IsNullOrEmpty(x))
+        {
+            FilteredSales = AllSales;
+            return;
+        }
+        string[] date = x.Split('-');
+        FilteredSales = AllSales.Where(x => x.OrderDate.Year == int.Parse(date[0]) && x.OrderDate.Month == int.Parse(date[1]) && x.OrderDate.Day == int.Parse(date[2])).ToList();
     }
 
-    private void ResetFilter()
+    private void FilterByMonth(string x)
     {
-        searchDate = null;
-        searchMonth = null;
-        FilteredSales = AllSales.ToList();
-        StateHasChanged();
+        if (string.IsNullOrEmpty(x))
+        {
+            FilteredSales = AllSales;
+            return;
+        }
+        string[] yearMonth = x.Split('-');
+        FilteredSales = AllSales.Where(x => x.OrderDate.Year == int.Parse(yearMonth[0]) && x.OrderDate.Month == int.Parse(yearMonth[1])).ToList();
     }
     
 }

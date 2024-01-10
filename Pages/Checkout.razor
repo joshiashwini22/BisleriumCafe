@@ -38,7 +38,7 @@
 <MudDialog @bind-IsVisible="isMemberDialogVisible" Options="dialogMemberOptions">
     <DialogContent>
         <div class="d-flex flex-column gap-y-3">
-            <MudText Typo="Typo.h4">Hi @_member.FirstName @_member.LastName</MudText>
+            <MudText Typo="Typo.h6">Hi @_member.FirstName @_member.LastName</MudText>
             @if (isRegularCustomer.Equals(true))
             {
                 <MudText Typo="Typo.h4">Kudos on becoming a regular member!</MudText>
@@ -142,7 +142,6 @@
                 {
                     isRegularCustomer = SalesService.IsRegularMember(Number);
                     _member.IsRegularMember = isRegularCustomer;
-                    Snackbar.Add($"{ isRegularCustomer}", Severity.Info, config => { config.ShowCloseIcon = false; config.VisibleStateDuration = 2000; config.ShowTransitionDuration = 500; config.HideTransitionDuration = 500; });
 
                     if(_member.IsRegularMember == true){
                         discountAmount = _totalOrderAmount * 0.10f;
